@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Workout Timer</title>
+
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#ff69b4">
+
+<style>
+body {
+  margin: 0;
+  background: #111;
+  color: white;
+  font-family: system-ui, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.container {
+  text-align: center;
+}
+
+.exercise {
+  font-size: 1.4rem;
+  margin-bottom: 8px;
+}
+
+.resting {
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+  color: #aaa;
+}
+
+.timer-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.workout-num {
+  color: #ff69b4;
+  font-size: 4rem;
+  margin-right: 30px;
+}
+
+.timer {
+  font-size: 4rem;
+}
+
+button {
+  margin-top: 25px;
+  font-size: 1.2rem;
+  padding: 12px 28px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="exercise" id="exerciseLabel"></div>
+  <div class="resting" id="restLabel"></div>
+
+  <div class="timer-row">
+    <div class="workout-num" id="workoutNum">1</div>
+    <div class="timer" id="timer">00:20</div>
+  </div>
+
+  <button id="startPauseBtn">Start</button>
+</div>
+
+<script>
+const exercises = [
+  "Mountain Climbers",
+  "Bicycle Crunch",
+  "Plank Jacks",
+  "Leg Raises",
+  "Flutter Kicks",
+  "Plank",
+  "Russian Twist",
+  "Reverse Crunch"
+];
+
+let workout = 0;
+let time = 20;
+let isRest = false;
+let interval = null;
+let running = false;
+
+const timerEl = document.getElementById("timer");
+const numEl = document.getElementById("workoutNum");
+const labelEl = document.getElementById("exerciseLabel");
+const restEl = document.getElementById("restLabel");
+const btn = document.getElementById("startPauseBtn");
+
+labelEl.textContent = exercises[0];
+
+function speak(text) {
+  const u = new SpeechSynthesisUtterance(text);
+  speechSynthesis.speak(u);
+}
+
+function updateDisplay() {
+  timerEl.textContent = `00:${String(time).padStart(2, "0")}`;
+}
+
+function tick() {
+  if (time <= 3 && !isRest && time > 0) speak(time);
+  time--;
+
+  if (time < 0) {
+    if (!isRest) {
+      speak("3 2 1 Rest");
+      isRest = true;
+      time = 10;
+      restEl.textContent = "Resting";
+    } else {
+      workout++;
+      if (workout >= 8) {
+        speak("Workout complete");
+        clearInterval(interval);
+        btn.textContent = "Done";
+        return;
+      }
+      isRest = false;
+      time = 20;
+      numEl.textContent = workout + 1;
+      labelEl.textContent = exercises[workout];
+      restEl.textContent = "";
+    }
+  }
+
+  updateDisplay();
+}
+
+btn.onclick = () => {
+  if (!running) {
+    interval = setInterval(tick, 1000);
+    btn.textContent = "Pause";
+    running = true;
+  } else {
+    clearInterval(interval);
+    btn.textContent = "Start";
+    running = false;
+  }
+};
+
+updateDisplay();
+
+// PWA registration
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js");
+}
+</script>
+</body>
+</html>

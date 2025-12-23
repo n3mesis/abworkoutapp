@@ -1,0 +1,15 @@
+{
+  "name": "Workout Timer",
+  "short_name": "Workout",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#ff69b4",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2965/2965567.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
