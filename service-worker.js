@@ -1,13 +1,14 @@
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open("workout-timer").then(cache =>
-      cache.addAll(["index.html", "manifest.json"])
-    )
-  );
+// Basic service worker
+self.addEventListener('install', event => {
+    console.log('Service Worker installed');
+    self.skipWaiting();
 });
 
-self.addEventListener("fetch", e => {
-  e.respondWith(
-    caches.match(e.request).then(response => response || fetch(e.request))
-  );
+self.addEventListener('activate', event => {
+    console.log('Service Worker activated');
+});
+
+self.addEventListener('fetch', event => {
+    // Simple fetch handler; let network requests proceed
+    event.respondWith(fetch(event.request));
 });
