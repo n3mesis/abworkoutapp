@@ -1,7 +1,7 @@
 {
   "name": "HIIT Timer",
   "short_name": "HIIT Timer",
-  "start_url": "./index.html",
+  "start_url": "https://n3mesis.github.io/abworkoutapp/",
   "display": "standalone",
   "background_color": "#111111",
   "theme_color": "#FF1493",
