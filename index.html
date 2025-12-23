@@ -1,162 +1,179 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Workout Timer</title>
-
-<link rel="manifest" href="manifest.json" />
-<meta name="theme-color" content="#ff69b4">
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HIIT Timer</title>
 <style>
-body {
-  margin: 0;
-  background: #111;
-  color: white;
-  font-family: system-ui, sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.container {
-  text-align: center;
-}
-
-.exercise {
-  font-size: 1.4rem;
-  margin-bottom: 8px;
-}
-
-.resting {
-  font-size: 1.1rem;
-  margin-bottom: 12px;
-  color: #aaa;
-}
-
-.timer-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.workout-num {
-  color: #ff69b4;
-  font-size: 4rem;
-  margin-right: 30px;
-}
-
-.timer {
-  font-size: 4rem;
-}
-
-button {
-  margin-top: 25px;
-  font-size: 1.2rem;
-  padding: 12px 28px;
-  border-radius: 8px;
-  border: none;
-  cursor: pointer;
-}
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: #111;
+        color: #fff;
+    }
+    #workoutLabel {
+        font-size: 2rem;
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    #timerContainer {
+        display: flex;
+        align-items: center;
+        font-size: 3rem;
+        gap: 60px;
+    }
+    #workoutNumber {
+        color: pink;
+        font-weight: bold;
+    }
+    #timer {
+        font-weight: bold;
+    }
+    #controls {
+        margin-top: 30px;
+        display: flex;
+        gap: 20px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 1.2rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    button#start { background-color: #4CAF50; color: white; }
+    button#pause { background-color: #f44336; color: white; }
 </style>
 </head>
-
 <body>
-<div class="container">
-  <div class="exercise" id="exerciseLabel"></div>
-  <div class="resting" id="restLabel"></div>
 
-  <div class="timer-row">
-    <div class="workout-num" id="workoutNum">1</div>
-    <div class="timer" id="timer">00:20</div>
-  </div>
-
-  <button id="startPauseBtn">Start</button>
+<div id="workoutLabel">Press Start</div>
+<div id="timerContainer">
+    <div id="workoutNumber">1</div>
+    <div id="timer">00:20</div>
 </div>
 
+<div id="controls">
+    <button id="start">Start</button>
+    <button id="pause">Pause</button>
+</div>
+
+<audio id="doneSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+
 <script>
-const exercises = [
-  "Mountain Climbers",
-  "Bicycle Crunch",
-  "Plank Jacks",
-  "Leg Raises",
-  "Flutter Kicks",
-  "Plank",
-  "Russian Twist",
-  "Reverse Crunch"
+const workouts = [
+    "Mountain Climbers",
+    "Bicycle Crunch",
+    "Plank Jacks",
+    "Leg Raises",
+    "Flutter Kicks",
+    "Plank",
+    "Russian Twist",
+    "Reverse Crunch"
 ];
 
-let workout = 0;
-let time = 20;
-let isRest = false;
-let interval = null;
-let running = false;
+let currentWorkout = 0;
+let isRunning = false;
+let timer;
+let seconds = 20;
 
+const workoutLabel = document.getElementById("workoutLabel");
 const timerEl = document.getElementById("timer");
-const numEl = document.getElementById("workoutNum");
-const labelEl = document.getElementById("exerciseLabel");
-const restEl = document.getElementById("restLabel");
-const btn = document.getElementById("startPauseBtn");
+const workoutNumberEl = document.getElementById("workoutNumber");
+const startBtn = document.getElementById("start");
+const pauseBtn = document.getElementById("pause");
+const doneSound = document.getElementById("doneSound");
 
-labelEl.textContent = exercises[0];
-
+// Speech function
 function speak(text) {
-  const u = new SpeechSynthesisUtterance(text);
-  speechSynthesis.speak(u);
-}
-
-function updateDisplay() {
-  timerEl.textContent = `00:${String(time).padStart(2, "0")}`;
-}
-
-function tick() {
-  if (time <= 3 && !isRest && time > 0) speak(time);
-  time--;
-
-  if (time < 0) {
-    if (!isRest) {
-      speak("3 2 1 Rest");
-      isRest = true;
-      time = 10;
-      restEl.textContent = "Resting";
-    } else {
-      workout++;
-      if (workout >= 8) {
-        speak("Workout complete");
-        clearInterval(interval);
-        btn.textContent = "Done";
-        return;
-      }
-      isRest = false;
-      time = 20;
-      numEl.textContent = workout + 1;
-      labelEl.textContent = exercises[workout];
-      restEl.textContent = "";
+    if ('speechSynthesis' in window) {
+        const utter = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utter);
     }
-  }
-
-  updateDisplay();
 }
 
-btn.onclick = () => {
-  if (!running) {
-    interval = setInterval(tick, 1000);
-    btn.textContent = "Pause";
-    running = true;
-  } else {
-    clearInterval(interval);
-    btn.textContent = "Start";
-    running = false;
-  }
-};
+// Start/pause functionality
+startBtn.addEventListener("click", () => {
+    if (!isRunning) {
+        isRunning = true;
+        if (!timer) startWorkout();
+    }
+});
 
-updateDisplay();
+pauseBtn.addEventListener("click", () => {
+    isRunning = false;
+    clearInterval(timer);
+    timer = null;
+});
 
-// PWA registration
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js");
+function startWorkout() {
+    seconds = 20;
+    workoutLabel.textContent = `${workouts[currentWorkout]} starting`;
+    speak(`${workouts[currentWorkout]} starting`);
+    workoutNumberEl.textContent = currentWorkout + 1;
+    updateTimerDisplay();
+
+    timer = setInterval(() => {
+        if (!isRunning) return;
+
+        // Trigger 3-2-1 Rest voice cue when timer hits 3
+        if (seconds === 3) {
+            speak("3");
+        } else if (seconds === 2) {
+            speak("2");
+        } else if (seconds === 1) {
+            speak("1");
+        } else if (seconds === 0) {
+            speak("Rest");
+        }
+
+        seconds--;
+        updateTimerDisplay();
+
+        if (seconds < 0) {
+            clearInterval(timer);
+            startRest();
+        }
+    }, 1000);
+}
+
+function startRest() {
+    seconds = 10;
+    workoutLabel.textContent = "Resting";
+    updateTimerDisplay();
+
+    timer = setInterval(() => {
+        if (!isRunning) return;
+
+        seconds--;
+        updateTimerDisplay();
+
+        if (seconds < 0) {
+            clearInterval(timer);
+            currentWorkout++;
+            if (currentWorkout < workouts.length) {
+                startWorkout();
+            } else {
+                workoutLabel.textContent = "Workout Done!";
+                speak("Workout done");
+                doneSound.play();
+                timer = null;
+                isRunning = false;
+            }
+        }
+    }, 1000);
+}
+
+function updateTimerDisplay() {
+    let min = Math.floor(seconds / 60);
+    let sec = seconds % 60;
+    timerEl.textContent = `${String(min).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
 }
 </script>
+
 </body>
 </html>
